@@ -1,0 +1,68 @@
+#%RAML 1.0
+title: Globale Weather API
+protocols: [HTTP,HTTPS]
+version: V1
+baseUri: http://127.0.0.1:8585/api/V1/
+mediaType: 
+- application/json
+description: |
+  This API is an orchestration or legacy on prem weather api.
+  
+/cities:
+  get:
+      description: Retrieve Selected Elements.
+      displayName:  Singal Elements
+      responses: 
+        200:
+          body:
+            application/json: 
+              example: !include examples/cities.json
+        400:
+          body: 
+            application/json: 
+              example: !include error_response/400.json
+        404:
+          body: 
+            application/json: 
+              example: !include error_response/404.json
+        405:
+          body: 
+            application/json: 
+              example: !include error_response/405.json
+        415:
+          body: 
+            application/json: 
+              example: !include error_response/415.json
+        500:
+          body: 
+            application/json: 
+              example: !include error_response/500.json
+  /{city}/weather:
+      get:
+        description: Retrieve Selected Elements.
+        displayName:  Singal Elements
+        responses: 
+          200:
+            body:
+              application/json: 
+                example: !include examples/weather.json
+          400:
+            body: 
+              application/json: 
+                example: !include error_response/400.json
+          404:
+            body: 
+              application/json: 
+                example: !include error_response/404.json
+          405:
+            body: 
+              application/json: 
+                example: !include error_response/405.json
+          415:
+            body: 
+              application/json: 
+                example: !include error_response/415.json
+          500:
+            body: 
+              application/json: 
+                example: !include error_response/500.json
