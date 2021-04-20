@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd   http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd   http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd    http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd   http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd">
+    <flow name="weather-api-v1-main">
+        <http:listener path="/api/*" config-ref="weather-api-v1-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="weather-api-v1-config" />
+        <error-handler ref="commonError_Handler" />
+    </flow>
+    <flow name="weather-api-v1-console">
+        <http:listener path="/console/*" config-ref="weather-api-v1-httpListenerConfig">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="weather-api-v1-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\cities:weather-api-v1-config">
+        <logger level="INFO" doc:name="Logger" doc:id="7a860ff6-2562-448f-a4c2-f145a208b4eb" message="Get Cities Start" category="weather.api-get.cities" />
+        <flow-ref doc:name="Flow Reference" doc:id="78fdbb50-75bf-44eb-a52f-0b77c87181d6" name="get-cities.weather.api-subFlow" />
+        <logger level="INFO" doc:name="Logger" doc:id="0e2b3745-abb5-4d45-9db3-f86d1c27ac2e" message="Get Cities End" category="weather.api-get.cities" />
+    </flow>
+    <flow name="get:\cities\(city)\weather:weather-api-v1-config">
+        <logger level="INFO" doc:name="Logger" doc:id="031429ac-7c81-4ded-8916-f25fa6536185" message="Get City Weather Start" category="weather.api-get.city.weather" />
+        <ee:transform>
+            <ee:variables>
+                <ee:set-variable variableName="city"><![CDATA[attributes.uriParams.'city']]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="bf7cf1fc-fa4e-43d6-8fd2-1505d616f739" name="get-weather.weather.api-subFlow" />
+        <logger level="INFO" doc:name="Logger" doc:id="c4b2cb92-d5d4-4a55-aab4-7c28b4abcc37" category="weather.api-get.city.weather" message="Get City Weather End" />
+    </flow>
+</mule>
